@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>False9 Studio</title>
+    <script src = "https://cdnjs.cloudflare.com/ajax/libs/handjs/1.3.11/hand.min.js"></script>
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://preview.babylonjs.com/gui/babylon.gui.min.js"></script>
+  
+    <style>
+        #renderCanvas {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <input id="imageInput" accept="image/*" onchange="loadFile(event)" type="file" style="visibility:hidden" />
+    <canvas style ="touch-action: none;" id="renderCanvas"></canvas>
+    <script type="application/pixelShader" id="LinesPixelShader">
+        #ifdef GL_ES
+        precision highp float;
+        #endif
+        varying vec2 vUV;
+        uniform sampler2D textureSampler;
+        uniform vec4 baseColour;
+        void main(void) {
+             gl_FragColor = texture2D(textureSampler, vUV);
+             if(gl_FragColor == vec4(0,0,0,1)){
+               gl_FragColor = baseColour;
+             }
+        }
+</script>
+    <script>
+    
+
+    if (BABYLON.Engine.isSupported()) {
+      
+      
+        var base = new BABYLON.Color4(1,0,0,0);
+        var canvas = document.getElementById("renderCanvas"); // Get the canvas element
+        canvas.style.width = window.innerWidth + "px";
+        canvas.style.height = window.innerHeight + "px";
+        var engine = new BABYLON.Engine(canvas, true, { stencil : true}); // Generate the BABYLON 3D engine
+
+          /******* Add the create scene function ******/
+          var createScene = function () {
+                    
+                    
+                    
+                    
+                    // Create the scene space
+                    var scene = new BABYLON.Scene(engine);
+
+
+
+
+
+                    // Sets the scene background as white
+                    scene.clearColor = new BABYLON.Color3(0.5, 0.5, 0.5);
+                    //scene.__myBackground = new BABYLON.Layer("myBackground", "texture/real_madrid.png", scene, true);
+
+
+                     //Set the camera and its limits
+                     var camera = new BABYLON.ArcRotateCamera("Camera", Math.PI / 2, Math.PI / 2, 5, BABYLON.Vector3.Zero(), scene);
+                    camera.setPosition(new BABYLON.Vector3(0, 5, -0.10));
+                    camera.attachControl(canvas, true);
+                    camera.lowerBetaLimit = Math.PI / 2;
+                    camera.upperBetaLimit = Math.PI / 2;
+                    camera.lowerRadiusLimit = 7;
+                    camera.upperRadiusLimit = 7;
+
+
+                    // Add lights to the scene
+                    var light1 = new BABYLON.PointLight("light1", new BABYLON.Vector3(1, 3, -5), scene);
+                    light1.diffuse = new BABYLON.Color3(1, 1, 1);
+                    light1.specular = new BABYLON.Color3(1, 1, 1);
+                    light1.intensity = 0.9;
+                    
+                    var light2 = new BABYLON.PointLight("light2", new BABYLON.Vector3(0, 3, 5), scene);
+                    light2.diffuse = new BABYLON.Color3(1, 1, 1);
+                    light2.specular = new BABYLON.Color3(1, 1, 1);
+                    light2.intensity = 0.9;
+
+                    var light3 = new BABYLON.PointLight("light2", new BABYLON.Vector3(5, 0, 0), scene);
+                    light3.diffuse = new BABYLON.Color3(1, 1, 1);
+                    light3.specular = new BABYLON.Color3(1, 1, 1);
+                    light3.intensity = 0.2;
+
+                    var light4 = new BABYLON.PointLight("light2", new BABYLON.Vector3(-5, 0, 0), scene);
+                    light4.diffuse = new BABYLON.Color3(1, 1, 1);
+                    light4.specular = new BABYLON.Color3(1, 1, 1);
+                    light4.intensity = 0.4;
+
+                    //light1.position = camera.position;
+                    //light2.position = camera.position;
+
+                    //All global variables to be defined here
+                    var shirt;
+                    var decalImage ;
+                    var textValue;
+                    var currentMesh = null ;
+                    var type = null ; 
+                    var startingPoint ; 
+                    var sizeMap = new Map();
+                    var normalMap = new Map() ;
+                    var decalOffset = -0.2;
+                    var textOffset = - 1.5 ;
+                    var highLight = new BABYLON.HighlightLayer("highLight", scene);
+                    highLight.innerGlow = false ;  
+                    
+                    
+                    
+                    
+                   
+                      
+
+
+                    //Custom Texture - jersey designing only
+                    /*
+                    var linesShader = { fragmentElement: 'LinesPixelShader' };
+                    var customText = new BABYLON.CustomProceduralTexture("cu",linesShader,1024,scene);
+                    customText.setColor4("baseColour",base);
+                    var mainTexture = new BABYLON.Texture("print1.jpg", scene);
+                    customText.setTexture("textureSampler", mainTexture);
+                    mat.diffuseTexture = customText;
+                    mat.specularTexture = customText;
+                    mat.ambientTexture = customText;
+                    mat.emmissiveTexture = customText;
+                    mat.backfaceCulling = true;
+                    */
+
+
+                  
+
+                    //Material for the shirt
+                    var shirt_material = new BABYLON.StandardMaterial("material",scene);
+                    shirt_material.diffuseColor = new BABYLON.Color4(1,0,0);
+                    //shirt_material.diffuseTexture  = new BABYLON.Texture("texture/texture.jpeg", scene);
+                    shirt_material.specularColor = new BABYLON.Color4(0,0,0);
+                    shirt_material.backFaceCulling = false
+                    
+                    
+                    
+    
+                    
+
+                    scene.registerBeforeRender(function () {
+                
+                    });
+
+
+                
+                //****************************************************************************************************
+                //****************************************************************************************************
+                //****************************************************************************************************
+                //****************************************************************************************************
+                // Scene Loader - Load the shirt mesh
+                    BABYLON.SceneLoader.ImportMesh("","", "babylon_model/t+shirt.babylon", scene, function (newMeshes) {
+                        shirt = newMeshes[0];
+                        camera.target = shirt;
+                        shirt.material = shirt_material;
+                        
+                        
+                   
+                        
+
+                        //Get the position in the shirt
+                        var getShirtPosition = function () {
+                            // Use a predicate to get position on the shirt
+                            var pickinfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) { return mesh == shirt; });
+                            if (pickinfo.hit) {
+                                return pickinfo;
+                            }
+
+                            return null;
+                        }
+
+                        //When click is released
+                        var onPointerUp = function () {
+                            if (startingPoint) {
+                                camera.attachControl(canvas, true);
+                                startingPoint = null;
+
+                                return;
+                            }
+                        
+                        }
+                        
+
+
+                        //On button pressed down
+                        var onPointerDown = function (evt) {
+			                if (evt.button !== 0) {
+				                return;
+			                }
+                        // Check if we are under a mesh
+                            
+                            if(type != null){
+			                    var pickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) {
+                                    return mesh === shirt; });
+			                
+                            
+                                if (pickInfo.hit) {
+
+                                    if(type == "image"){
+                                        var decalMaterial = new BABYLON.StandardMaterial("decalMat", scene);
+		                                decalMaterial.diffuseTexture = new BABYLON.Texture(decalImage, scene);
+                                        decalMaterial.diffuseTexture.hasAlpha = true;
+                                        decalMaterial.zOffset = decalOffset;
+                                        decalOffset -= 0.2;
+				                        var decalSize = new BABYLON.Vector3(0.5, 0.5, 0.5);
+
+			                            /**************************CREATE DECAL*************************************************/
+				                        var decal = BABYLON.MeshBuilder.CreateDecal("decal", shirt, {position: pickInfo.pickedPoint, normal: pickInfo.getNormal(true), size: decalSize},scene);
+                                        decal.material = decalMaterial;
+                                        sizeMap.set(decal , decalSize); 
+                                        normalMap.set(decal,pickInfo.getNormal(true));
+                                        currentMesh = decal ;
+                                        highLight.addMesh(currentMesh, BABYLON.Color3.Green());
+                                        mainPanel.isVisible = false;
+                                        imagePanel.isVisible = true;
+                                        back_button.isVisible = true;
+                                        type = null;
+
+                                    
+			                            /***************************************************************************************/	
+                                    }
+                                    else{
+                                        //Add code for text
+                                        var textTexture = new BABYLON.DynamicTexture("dynamic texture", {width:512, height:256}, scene);   
+                                        textTexture.hasAlpha = true;
+                                        var decalMaterial = new BABYLON.StandardMaterial("decalMat", scene);
+		                                decalMaterial.diffuseTexture = textTexture ;
+                                        decalMaterial.hasAlpha = true;
+                                        decalMaterial.zOffset = textOffset;
+                                        textOffset -= 0.2;
+				                        var decalSize = new BABYLON.Vector3(1, 1, 1);
+
+			                            /**************************CREATE DECAL*************************************************/
+				                        var decal = BABYLON.MeshBuilder.CreateDecal("decal", shirt, {position: pickInfo.pickedPoint, normal: pickInfo.getNormal(true), size: decalSize},scene);
+                                        decal.material = decalMaterial;
+
+                                        //var textContext = decal.getContext();
+
+                                        var font = "bold 44px monospace";
+                                        textTexture.drawText(textValue, 75, 135, font, "black", "transparent", true, true);
+
+                                        sizeMap.set(decal , decalSize); 
+                                        normalMap.set(decal,pickInfo.getNormal(true));
+                                        currentMesh = decal ;
+                                        highLight.addMesh(currentMesh, BABYLON.Color3.Green());
+                                        mainPanel.isVisible = false;
+                                        imagePanel.isVisible = true;
+                                        back_button.isVisible = true;
+                                        type = null;
+
+
+                                    }
+                                }
+                                
+                            }
+
+                            else{
+
+                                var pickInfo = scene.pick(scene.pointerX , scene.pointerY ,function(mesh){ return mesh != shirt })
+                                if(pickInfo.hit) {
+                                    
+                                    currentMesh = pickInfo.pickedMesh;
+                                    imagePanel.isVisible = true;
+                                    mainPanel.isVisible = false;
+                                    back_button.isVisible = true;
+                                    highLight.addMesh(currentMesh , BABYLON.Color3.Green())
+                                    startingPoint = getShirtPosition(evt);
+                                    
+                                    if (startingPoint) { // we need to disconnect camera from canvas
+                                        setTimeout(function () {
+                                        camera.detachControl(canvas);
+                                    }, 0);
+                                    }
+                                }
+
+                            }
+
+                        }// End of pointer down
+
+
+
+
+                        // On click and drag
+                        var onPointerMove = function (evt) {
+                            if (!startingPoint) {
+                                return;
+                            }
+
+                            var current = getShirtPosition(evt);
+
+                            if (!current) {
+                                return;
+                            }
+
+                            var diff = current.pickedPoint.subtract(startingPoint);
+                            currentMesh.position.addInPlace(diff);
+                            var decalSize = sizeMap.get(currentMesh);
+                            var decal = BABYLON.MeshBuilder.CreateDecal("updated_decal", shirt, {position: current.pickedPoint, normal : current.getNormal(true) , size: decalSize});
+                            decal.material = currentMesh.material ;
+                            sizeMap.set(decal,decalSize);
+                            normalMap.set(decal,current.getNormal(true));
+
+                            sizeMap.delete(currentMesh);
+                            normalMap.delete(currentMesh);
+                            currentMesh.dispose() ; 
+                            currentMesh = decal;
+                            highLight.addMesh(currentMesh, BABYLON.Color3.Green());
+                            startingPoint = current.pickedPoint;
+
+                        }
+
+
+                        
+
+
+
+                        var canvas = engine.getRenderingCanvas();
+
+                        canvas.addEventListener("pointerdown", onPointerDown, false);
+                        canvas.addEventListener("pointerup", onPointerUp, false);
+                        canvas.addEventListener("pointermove", onPointerMove, false);
+
+                        scene.onDispose = function () {
+                            canvas.removeEventListener("pointerdown", onPointerDown);
+                            canvas.removeEventListener("pointerup", onPointerUp);
+                            canvas.removeEventListener("pointermove", onPointerMove);
+                        }
+
+
+                      
+                    }); //end of scene loader
+
+                    //****************************************************************************************************
+                    //****************************************************************************************************
+                    //****************************************************************************************************
+                    //****************************************************************************************************
+
+            
+                
+
+
+            // ***************************** GUI *******************************
+            var advancedTexture = BABYLON.GUI.AdvancedDynamicTexture.CreateFullscreenUI("UI");
+            
+
+            // ************* Header *****************
+           
+
+ 
+    
+            //Main Menu Stack Panel
+            var mainPanel = new BABYLON.GUI.StackPanel();
+            mainPanel.width = "200px";
+            mainPanel.isVertical = true;
+            mainPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_RIGHT;
+            mainPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_CENTRE;
+            advancedTexture.addControl(mainPanel);
+
+            //Image Stack Panel
+            var imagePanel = new BABYLON.GUI.StackPanel();
+            imagePanel.width = "100%";
+            imagePanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+            imagePanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTRE;
+            advancedTexture.addControl(imagePanel);
+
+            //Text Menu Panel
+
+            var textPanel = new BABYLON.GUI.StackPanel();
+            textPanel.width = "100%";
+            textPanel.verticalAlignment = BABYLON.GUI.Control.VERTICAL_ALIGNMENT_BOTTOM;
+            textPanel.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTRE;
+            advancedTexture.addControl(textPanel);
+
+
+
+
+            //Text Block
+            var textBlock = new BABYLON.GUI.TextBlock();
+            textBlock.text = "Diffuse color:";
+            textBlock.height = "30px";
+    
+
+
+            //Image Upload Button
+            var image_button = BABYLON.GUI.Button.CreateSimpleButton("button", "Add Image");
+            image_button.width = 1;
+            image_button.height = "40px";
+            image_button.color = "white";
+            image_button.background = "green";
+            image_button.onPointerClickObservable.add(function () {
+                imageUpload = document.getElementById("imageInput");
+                imageUpload.click();
+                imageUpload.onchange = function(){
+                    
+                    var fReader = new FileReader();
+                    fReader.readAsDataURL(imageUpload.files[0]);
+                    fReader.onloadend = function(event){
+                        decalImage = event.target.result ;
+                        type = "image";
+                    }           
+                }
+            });
+
+
+            //Add Text Button
+            var text_button = BABYLON.GUI.Button.CreateSimpleButton("button", "Add Text");
+            text_button.width = 1;
+            text_button.height = "40px";
+            text_button.color = "white";
+            text_button.background = "green";
+            text_button.onPointerClickObservable.add(function () {
+                
+            });
+
+
+
+            
+            
+            //Delete Button
+            var delete_button = BABYLON.GUI.Button.CreateSimpleButton("delete", "Delete Image");
+            delete_button.width = 1;
+            delete_button.height = "40px";
+            delete_button.color = "white";
+            delete_button.background = "green";
+            delete_button.onPointerClickObservable.add(function () {
+                if(currentMesh != null){
+                    currentMesh.dispose() ;
+                    currentMesh = null;
+                    back_button.isVisible = false;
+                    imagePanel.isVisible = false;
+                    mainPanel.isVisible = true ;
+                }
+            });
+            
+
+            //Width increase button
+            var width_button = BABYLON.GUI.Button.CreateSimpleButton("widthIncrease", "Width Increase");
+            width_button.width = 1;
+            width_button.height = "40px";
+            width_button.color = "white";
+            width_button.background = "green";
+            width_button.onPointerClickObservable.add(function () {
+                
+                if(currentMesh != null){
+                    decalSize = sizeMap.get(currentMesh) ;
+                    decalSize.x += 0.05 ;
+                    var decal = BABYLON.MeshBuilder.CreateDecal("updated_decal", shirt, {position: currentMesh.position, normal : normalMap.get(currentMesh) , size: decalSize});
+                    decal.material = currentMesh.material ;
+                    
+                    sizeMap.set(decal,decalSize);
+                    normalMap.set(decal, normalMap.get(currentMesh))
+                    sizeMap.delete(currentMesh);
+                    normalMap.delete(currentMesh);
+                    currentMesh.dispose();
+                    currentMesh = decal;
+                    highLight.addMesh(currentMesh, BABYLON.Color3.Green());
+                }
+            });
+
+            //Width decrease button
+            var width_decrease_button = BABYLON.GUI.Button.CreateSimpleButton("widthDecrease", "Width Decrease");
+            width_decrease_button.width = 1;
+            width_decrease_button.height = "40px";
+            width_decrease_button.color = "white";
+            width_decrease_button.background = "green";
+            width_decrease_button.onPointerClickObservable.add(function () {
+                
+                if(currentMesh != null){
+                    decalSize = sizeMap.get(currentMesh) ;
+                    decalSize.x -= 0.05 ;
+                    var decal = BABYLON.MeshBuilder.CreateDecal("updated_decal", shirt, {position: currentMesh.position, normal : normalMap.get(currentMesh) , size: decalSize});
+                    decal.material = currentMesh.material ;
+                    
+                    sizeMap.set(decal,decalSize);
+                    normalMap.set(decal, normalMap.get(currentMesh))
+                    sizeMap.delete(currentMesh);
+                    normalMap.delete(currentMesh);
+                    currentMesh.dispose();
+                    currentMesh = decal;
+                    highLight.addMesh(currentMesh, BABYLON.Color3.Green());
+                }
+            });
+
+
+            //Height increase button
+            var height_increase_button = BABYLON.GUI.Button.CreateSimpleButton("heightIncrease", "Height Increase");
+            height_increase_button.width = 1;
+            height_increase_button.height = "40px";
+            height_increase_button.color = "white";
+            height_increase_button.background = "blue";
+            height_increase_button.onPointerClickObservable.add(function () {
+                
+                if(currentMesh != null){
+                    decalSize = sizeMap.get(currentMesh) ;
+                    decalSize.y += 0.05 ;
+                    var decal = BABYLON.MeshBuilder.CreateDecal("updated_decal", shirt, {position: currentMesh.position, normal : normalMap.get(currentMesh) , size: decalSize});
+                    decal.material = currentMesh.material ;
+                    
+                    sizeMap.set(decal,decalSize);
+                    normalMap.set(decal, normalMap.get(currentMesh))
+                    sizeMap.delete(currentMesh);
+                    normalMap.delete(currentMesh);
+                    currentMesh.dispose();
+                    currentMesh = decal;
+                    highLight.addMesh(currentMesh, BABYLON.Color3.Green());
+                }
+            });
+
+
+            //Height decrease button
+            var height_decrease_button = BABYLON.GUI.Button.CreateSimpleButton("heightDecrease", "Height Decrease");
+            height_decrease_button.width = 1;
+            height_decrease_button.height = "40px";
+            height_decrease_button.color = "white";
+            height_decrease_button.background = "blue";
+            height_decrease_button.onPointerClickObservable.add(function () {
+                
+                if(currentMesh != null){
+                    decalSize = sizeMap.get(currentMesh) ;
+                    decalSize.y -= 0.05 ;
+                    var decal = BABYLON.MeshBuilder.CreateDecal("updated_decal", shirt, {position: currentMesh.position, normal : normalMap.get(currentMesh) , size: decalSize});
+                    decal.material = currentMesh.material ;
+                    
+                    sizeMap.set(decal,decalSize);
+                    normalMap.set(decal, normalMap.get(currentMesh))
+                    sizeMap.delete(currentMesh);
+                    normalMap.delete(currentMesh);
+                    currentMesh.dispose();
+                    currentMesh = decal;
+                    highLight.addMesh(currentMesh, BABYLON.Color3.Green());
+                    mainPanel.isVisible = false;
+                    imagePanel.isVisible = true;
+                }
+            });
+
+
+
+
+         
+            //ColorPicker for shirt
+            var picker = new BABYLON.GUI.ColorPicker();
+            picker.value = shirt_material.diffuseColor;
+            picker.height = "150px";
+            picker.width = "150px";
+            picker.horizontalAlignment = BABYLON.GUI.Control.HORIZONTAL_ALIGNMENT_CENTER;
+            picker.onValueChangedObservable.add(function(value) { // value is a color3
+                shirt_material.diffuseColor.copyFrom(value);
+            });
+
+            
+
+            //Text Menu Items *******************************************************************
+            var inputText = new BABYLON.GUI.InputText();
+            inputText.width = 1;
+            inputText.maxWidth = 0.2;
+            inputText.height = "40px";
+            inputText.text = "";
+            inputText.color = "white";
+            inputText.background = "green";
+            inputText.onTextChangedObservable.add(function(val){
+                type = "text"
+                textValue = inputText.text;
+            });
+
+            
+
+
+
+
+            //Back button
+            var back_button = BABYLON.GUI.Button.CreateSimpleButton("backButton", "Back");
+            back_button.width = "40px";
+            back_button.height = "40px";
+            back_button.color = "white";
+            back_button.background = "black";
+            back_button.onPointerClickObservable.add(function () {
+                
+                mainPanel.isVisible = true; 
+                imagePanel.isVisible = false;
+                back_button.isVisible = false;
+                highLight.removeMesh(currentMesh);
+                currentMesh = null;
+            });
+
+
+            
+            mainPanel.addControl(picker);
+            mainPanel.addControl(textBlock);     
+            mainPanel.addControl(image_button);
+
+            imagePanel.addControl(delete_button) ;
+            imagePanel.addControl(width_button);
+            imagePanel.addControl(width_decrease_button);
+            imagePanel.addControl(height_increase_button);
+            imagePanel.addControl(height_decrease_button);
+
+            textPanel.addControl(inputText);
+
+            advancedTexture.addControl(back_button);
+
+            imagePanel.isVisible = false;
+            back_button.isVisible = false;
+
+
+
+
+                      return scene;
+    }; /******* End of the create scene function ******/
+
+    
+    
+    
+    
+    var scene = createScene(); //Call the createScene function
+    engine.runRenderLoop(function () { // Register a render loop to repeatedly render the scene
+
+                    
+        scene.render();
+
+
+    });
+
+
+    
+    
+    window.addEventListener("resize", function () { // Watch for browser/canvas resize events
+                  engine.resize();
+    });
+    
+    
+    } //End of babylon engine
+</script>
+    </script>
+</body>
+</html>
